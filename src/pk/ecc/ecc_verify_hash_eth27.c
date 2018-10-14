@@ -17,7 +17,7 @@
 */
 
 /**
-   Verify an ECC signature (ANSI X9.62 format)
+   Verify an ECC signature (Ethereum format with recovery_id+27)
    @param sig         The signature to verify
    @param siglen      The length of the signature (octets)
    @param hash        The hash (message digest) that was signed
@@ -26,22 +26,29 @@
    @param key         The corresponding public ECC key
    @return CRYPT_OK if successful (even if the signature is not valid)
 */
-int ecc_verify_hash(const unsigned char *sig,  unsigned long siglen,
-                    const unsigned char *hash, unsigned long hashlen,
-                    int *stat, const ecc_key *key)
+int ecc_verify_hash_eth27(const unsigned char *sig,  unsigned long siglen,
+                          const unsigned char *hash, unsigned long hashlen,
+                          int *stat, const ecc_key *key)
 {
    void *r, *s;
    int err;
 
    LTC_ARGCHK(sig != NULL);
+   LTC_ARGCHK(key != NULL);
 
    if ((err = mp_init_multi(&r, &s, NULL)) != CRYPT_OK) return err;
 
-   /* ANSI X9.62 format - ASN.1 encoded SEQUENCE{ INTEGER(r), INTEGER(s) }  */
-   if ((err = der_decode_sequence_multi_ex(sig, siglen, LTC_DER_SEQ_SEQUENCE | LTC_DER_SEQ_STRICT,
-                                     LTC_ASN1_INTEGER, 1UL, r,
-                                     LTC_ASN1_INTEGER, 1UL, s,
-                                     LTC_ASN1_EOL, 0UL, NULL)) != CRYPT_OK) goto error;
+   /* Only valid for secp256k1 - OID 1.3.132.0.10 */
+   if (pk_oid_cmp_with_ulong("1.3.132.0.10", key->dp.oid, key->dp.oidlen) != CRYPT_OK) {
+      err = CRYPT_ERROR;
+      goto error;
+   }
+   if (siglen != 65) { /* Only secp256k1 curves use this format, so must be 65 bytes long */
+      err = CRYPT_INVALID_PACKET;
+      goto error;
+   }
+   if ((err = mp_read_unsigned_bin(r, (unsigned char *)sig, 32)) != CRYPT_OK) goto error;
+   if ((err = mp_read_unsigned_bin(s, (unsigned char *)sig + 32, 32)) != CRYPT_OK) goto error;
 
    err = ecc_verify_hash_internal(r, s, hash, hashlen, stat, key);
 

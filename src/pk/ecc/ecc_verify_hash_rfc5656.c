@@ -9,7 +9,7 @@
 
 #include "tomcrypt_private.h"
 
-#ifdef LTC_MECC
+#if defined(LTC_MECC) && defined(LTC_SSH)
 
 /**
   @file ecc_verify_hash.c
@@ -17,7 +17,7 @@
 */
 
 /**
-   Verify an ECC signature (ANSI X9.62 format)
+   Verify an ECC signature (RFC5656 / SSH format)
    @param sig         The signature to verify
    @param siglen      The length of the signature (octets)
    @param hash        The hash (message digest) that was signed
@@ -26,22 +26,33 @@
    @param key         The corresponding public ECC key
    @return CRYPT_OK if successful (even if the signature is not valid)
 */
-int ecc_verify_hash(const unsigned char *sig,  unsigned long siglen,
-                    const unsigned char *hash, unsigned long hashlen,
-                    int *stat, const ecc_key *key)
+int ecc_verify_hash_rfc5656(const unsigned char *sig,  unsigned long siglen,
+                            const unsigned char *hash, unsigned long hashlen,
+                            int *stat, const ecc_key *key)
 {
    void *r, *s;
    int err;
+   char name[64], name2[64];
+   unsigned long namelen = sizeof(name2);
 
    LTC_ARGCHK(sig != NULL);
+   LTC_ARGCHK(key != NULL);
 
    if ((err = mp_init_multi(&r, &s, NULL)) != CRYPT_OK) return err;
 
-   /* ANSI X9.62 format - ASN.1 encoded SEQUENCE{ INTEGER(r), INTEGER(s) }  */
-   if ((err = der_decode_sequence_multi_ex(sig, siglen, LTC_DER_SEQ_SEQUENCE | LTC_DER_SEQ_STRICT,
-                                     LTC_ASN1_INTEGER, 1UL, r,
-                                     LTC_ASN1_INTEGER, 1UL, s,
-                                     LTC_ASN1_EOL, 0UL, NULL)) != CRYPT_OK) goto error;
+   /* Decode as SSH data sequence, per RFC4251 */
+   if ((err = ssh_decode_sequence_multi(sig, siglen,
+                                        LTC_SSHDATA_STRING, name, 64,
+                                        LTC_SSHDATA_MPINT,  r,
+                                        LTC_SSHDATA_MPINT,  s,
+                                        LTC_SSHDATA_EOL,    NULL)) != CRYPT_OK) goto error;
+
+   /* Check curve matches identifier string */
+   if ((err = ecc_ssh_ecdsa_encode_name(name2, &namelen, key)) != CRYPT_OK) goto error;
+   if (XSTRCMP(name,name2) != 0) {
+      err = CRYPT_INVALID_ARG;
+      goto error;
+   }
 
    err = ecc_verify_hash_internal(r, s, hash, hashlen, stat, key);
 

@@ -585,7 +585,7 @@ static int _ecc_new_api(void)
       len = sizeof(buf);
       DO(ecc_sign_hash_rfc5656(data16, 16, buf, &len, &yarrow_prng, find_prng ("yarrow"), &privkey));
       stat = 0;
-      DO(ecc_verify_hash_ex(buf, len, data16, 16, LTC_ECCSIG_RFC5656, &stat, &pubkey));
+      DO(ecc_verify_hash_rfc5656(buf, len, data16, 16, &stat, &pubkey));
       if (stat != 1) return CRYPT_FAIL_TESTVECTOR;
 #endif
 
@@ -1575,7 +1575,7 @@ static int _ecc_test_recovery(void)
 
       /* test verification */
       stat = 0;
-      DO(ecc_verify_hash_ex(buf, len, data16, 16, LTC_ECCSIG_RFC7518, &stat, &pubkey));
+      DO(ecc_verify_hash_rfc7518(buf, len, data16, 16, &stat, &pubkey));
       if (stat != 1) return CRYPT_FAIL_TESTVECTOR;
 
       /* test recovery */

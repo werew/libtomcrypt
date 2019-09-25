@@ -11,7 +11,8 @@
 
 #ifdef LTC_BCRYPT
 
-/** These tests were shamelessly c&p'ed from the OpenBSD sources */
+/** These tests were shamelessly c&p'ed from the OpenBSD sources
+ * https://cvsweb.openbsd.org/cgi-bin/cvsweb/src/regress/lib/libutil/bcrypt_pbkdf/bcrypt_pbkdf_test.c */
 
 struct test {
    unsigned int rounds;
@@ -129,7 +130,7 @@ int bcrypt_test(void)
       t = &tests[i];
       l = t->keylen;
       XMEMSET(key, 0, sizeof(key));
-      DO(bcrypt(t->password, t->passlen, (unsigned char*)t->salt, t->saltlen, t->rounds, idx, key, &l));
+      DO(bcrypt_pbkdf_openbsd(t->password, t->passlen, (unsigned char*)t->salt, t->saltlen, t->rounds, idx, key, &l));
       DO(do_compare_testvector(key, l, (unsigned char*)t->key, t->keylen, "OpenBSD testvectors", i));
 
 #if defined(LTC_TEST_DBG) && LTC_TEST_DBG > 1
@@ -138,6 +139,14 @@ int bcrypt_test(void)
    }
 
    return CRYPT_OK;
+}
+
+#else
+
+
+int bcrypt_test(void)
+{
+   return CRYPT_NOP;
 }
 
 #endif

@@ -111,7 +111,7 @@ int bcrypt_test(void)
 
    XMEMSET(key, 0, sizeof(key));
    l = 88;
-   DO(bcrypt_pbkdf_openbsd("password", 8, (unsigned char*)"salt", 4, 4, idx, key, &l));
+   DO(bcrypt_pbkdf_openbsd("password", 8, (unsigned char*)"salt", 4, 0, idx, key, &l));
    for (i = 1; i < 88; ++i) {
       key[0] |= key[i];
    }

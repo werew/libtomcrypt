@@ -77,7 +77,7 @@ int bcrypt(const          char *password, unsigned long password_len,
 {
    int err;
    ulong32 blkno;
-   unsigned long left, itts, x, y, hashed_pass_len, step_size, steps, dest;
+   unsigned long left, itts, x, y, hashed_pass_len, step_size, steps, dest, used_rounds;
    unsigned char *buf[3], blkbuf[4];
    unsigned char *hashed_pass;
 
@@ -86,12 +86,18 @@ int bcrypt(const          char *password, unsigned long password_len,
    LTC_ARGCHK(out      != NULL);
    LTC_ARGCHK(outlen   != NULL);
 
-   if ((password_len == 0) || (salt_len == 0) || (rounds == 0) || (*outlen == 0)) {
+   if ((password_len == 0) || (salt_len == 0) || (*outlen == 0)) {
       return CRYPT_INVALID_ARG;
    }
    /* test hash IDX */
    if ((err = hash_is_valid(hash_idx)) != CRYPT_OK) {
       return err;
+   }
+   /* set default value for rounds if not given */
+   if (rounds == 0) {
+      used_rounds = LTC_BCRYPT_DEFAULT_ROUNDS;
+   } else {
+      used_rounds = rounds;
    }
 
    buf[0]      = XMALLOC(MAXBLOCKSIZE * 3);
@@ -141,7 +147,7 @@ int bcrypt(const          char *password, unsigned long password_len,
        XMEMCPY(buf[2], buf[1], y);
 
        /* now compute repeated and XOR it in buf[2] */
-       for (itts = 1; itts < rounds; ++itts) {
+       for (itts = 1; itts < used_rounds; ++itts) {
           x = MAXBLOCKSIZE;
           if ((err = hash_memory(hash_idx, buf[1], y, buf[0], &x)) != CRYPT_OK) {
              goto LBL_ERR;

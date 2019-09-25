@@ -491,6 +491,10 @@
 
 #define LTC_BCRYPT
 
+#ifndef LTC_BCRYPT_DEFAULT_ROUNDS
+#define LTC_BCRYPT_DEFAULT_ROUNDS 10
+#endif
+
 /* Keep LTC_NO_HKDF for compatibility reasons
  * superseeded by LTC_NO_MISC*/
 #ifndef LTC_NO_HKDF

@@ -433,6 +433,7 @@ const char *crypt_build_settings =
 #endif
 #if defined(LTC_BCRYPT)
     " BCRYPT "
+    " " NAME_VALUE(LTC_BCRYPT_DEFAULT_ROUNDS) " "
 #endif
 #if defined(LTC_CRC32)
     " CRC32 "

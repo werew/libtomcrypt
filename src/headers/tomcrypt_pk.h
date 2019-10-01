@@ -58,6 +58,7 @@ int rsa_exptmod(const unsigned char *in,   unsigned long inlen,
                       unsigned char *out,  unsigned long *outlen, int which,
                 const rsa_key *key);
 
+int rsa_init(rsa_key *key);
 void rsa_free(rsa_key *key);
 
 /* These use PKCS #1 v2.0 padding */

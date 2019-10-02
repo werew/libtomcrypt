@@ -2499,15 +2499,15 @@
 					>
 				</File>
 				<File
+					RelativePath="src\pk\ed25519\ed25519_import_raw.c"
+					>
+				</File>
+				<File
 					RelativePath="src\pk\ed25519\ed25519_import_x509.c"
 					>
 				</File>
 				<File
 					RelativePath="src\pk\ed25519\ed25519_make_key.c"
-					>
-				</File>
-				<File
-					RelativePath="src\pk\ed25519\ed25519_set_key.c"
 					>
 				</File>
 				<File
@@ -2635,15 +2635,15 @@
 					>
 				</File>
 				<File
+					RelativePath="src\pk\x25519\x25519_import_raw.c"
+					>
+				</File>
+				<File
 					RelativePath="src\pk\x25519\x25519_import_x509.c"
 					>
 				</File>
 				<File
 					RelativePath="src\pk\x25519\x25519_make_key.c"
-					>
-				</File>
-				<File
-					RelativePath="src\pk\x25519\x25519_set_key.c"
 					>
 				</File>
 				<File

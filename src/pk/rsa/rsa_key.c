@@ -15,6 +15,74 @@
 */
 
 #ifdef LTC_MRSA
+#include <stdarg.h>
+
+static void _mpi_shrink_multi(void **a, ...)
+{
+   void **cur;
+   unsigned n;
+   int err;
+   va_list args;
+   void *tmp[10] = { 0 };
+
+   n = 0;
+   err = CRYPT_ERROR;
+   cur = a;
+   va_start(args, a);
+   while (cur != NULL) {
+      if (n >= sizeof(tmp)/sizeof(tmp[0])) {
+         goto out;
+      }
+      if (*cur != NULL) {
+         if ((err = mp_init_copy(&tmp[n], *cur)) != CRYPT_OK) {
+            goto out;
+         }
+         n++;
+      }
+      cur = va_arg(args, void**);
+   }
+   va_end(args);
+
+   n = 0;
+   cur = a;
+   va_start(args, a);
+   while (cur != NULL) {
+      if (*cur != NULL) {
+         mp_clear(*cur);
+         *cur = tmp[n];
+         n++;
+      }
+      cur = va_arg(args, void**);
+   }
+out:
+   va_end(args);
+   /* clean-up after an error
+    * or after this was called with too many args
+    */
+   if ((err != CRYPT_OK) ||
+         (n >= sizeof(tmp)/sizeof(tmp[0]))) {
+      for (n = 0; n < sizeof(tmp)/sizeof(tmp[0]); ++n) {
+         if (tmp[n] != NULL) {
+            mp_clear(tmp[n]);
+         }
+      }
+   }
+}
+
+/**
+  This shrinks the allocated memory of a RSA key
+
+     It will use up some more memory temporarily,
+     but then it will free-up the entire sequence that
+     was once allocated when the key was created/populated.
+
+  @param key   The RSA key to shrink
+*/
+void rsa_shrink_key(rsa_key *key)
+{
+   LTC_ARGCHKVD(key != NULL);
+   _mpi_shrink_multi(&key->q, &key->p, &key->qP, &key->dP, &key->dQ, &key->N, &key->d, &key->e, NULL);
+}
 
 /**
   Init an RSA key
